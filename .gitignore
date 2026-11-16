@@ -1,0 +1,57 @@
+# Only Basket app files belong in this repo.
+# Personal notes and research (R&D/, plans, logs) live outside it and must never be added.
+R&D/
+PLAN.md
+RESEARCH_LOG.md
+notes/
+
+# macOS
+.DS_Store
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# Node / JavaScript
+node_modules/
+dist/
+web-build/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Expo / React Native
+.expo/
+expo-env.d.ts
+.metro-health-check*
+*.orig.*
+
+# Build outputs (add /ios and /android here only if the chosen stack generates them)
+*.apk
+*.aab
+*.ipa
+
+# Flutter / Dart (in case we pick it)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# Python (design mockup script)
+__pycache__/
+*.pyc
+.venv/
+
+# Editors
+.vscode/
+.idea/
+*.log
