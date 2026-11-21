@@ -1,98 +1,132 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { Button } from '@/components/button';
+import { Icon } from '@/components/icon';
+import { TextField } from '@/components/text-field';
+import { loadName, saveName } from '@/lib/storage';
+import { colors, layout, space, type } from '@/theme';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+/** Screen 1 · Welcome: enter your name, then create a household list or join one. */
+export default function WelcomeScreen() {
+  const [name, setName] = useState('');
+  const [invite, setInvite] = useState('');
+
+  // When the screen opens, fill in the name saved last time (if any).
+  useEffect(() => {
+    loadName().then(setName);
+  }, []);
+
+  const hasName = name.trim().length > 0;
+
+  async function handleCreate() {
+    await saveName(name);
+    router.push('/list');
   }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
+
+  async function handleJoin() {
+    await saveName(name);
+    Alert.alert('Coming soon', 'Joining a list with a link or code arrives in step 6.');
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <View style={styles.hero}>
+            <View style={styles.heroCircle}>
+              <Icon name="basket" size={60} color={colors.primary} strokeWidth={1.8} />
+            </View>
+            <Text style={styles.title}>Basket</Text>
+            <Text style={styles.subtitle}>
+              One shopping list for the whole home. Add things, and watch them get ticked off live,
+              on every phone.
+            </Text>
+          </View>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+          <View style={styles.form}>
+            <TextField
+              label="Your name"
+              value={name}
+              onChangeText={setName}
+              placeholder="e.g. Ananya"
+              autoCapitalize="words"
+              returnKeyType="done"
+            />
+            <Button title="Create a household list" onPress={handleCreate} disabled={!hasName} />
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+            <View style={styles.divider}>
+              <View style={styles.line} />
+              <Text style={styles.dividerText}>or join one</Text>
+              <View style={styles.line} />
+            </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+            <TextField
+              icon="link"
+              value={invite}
+              onChangeText={setInvite}
+              placeholder="Paste invite link or code"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Button
+              title="Join list"
+              variant="secondary"
+              onPress={handleJoin}
+              disabled={!hasName || invite.trim().length === 0}
+            />
+          </View>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          <Text style={styles.foot}>No sign-up. Your name is saved only on this phone.</Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
+  safe: { flex: 1, backgroundColor: colors.bg },
+  flex: { flex: 1 },
+  scroll: { flexGrow: 1, paddingBottom: space[6] },
+  hero: { alignItems: 'center', paddingTop: 56, paddingHorizontal: space[6], paddingBottom: 28 },
+  heroCircle: {
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    marginBottom: space[5],
   },
-  title: {
+  title: { ...type.display, color: colors.text },
+  subtitle: {
+    ...type.body,
+    color: colors.muted,
     textAlign: 'center',
+    marginTop: 10,
+    maxWidth: 320,
   },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  form: { paddingHorizontal: space[5], gap: 14 },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: space[2], marginVertical: 6 },
+  line: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { ...type.caption, color: colors.muted },
+  foot: {
+    ...type.caption,
+    color: colors.muted,
+    textAlign: 'center',
+    paddingTop: space[4],
+    paddingHorizontal: layout.screenMargin + space[3],
   },
 });
